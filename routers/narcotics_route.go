@@ -21,4 +21,6 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 func SetupAuth(auth fiber.Router) {
 	auth.Post("/singin", handlers.Authhandler)
 	auth.Post("/register", handlers.Registerhandler)
+	auth.Get("/me", middlewares.JWTMiddleware, handlers.Me)
+	// auth.Get("/me", handlers.Test)
 }

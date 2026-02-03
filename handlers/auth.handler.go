@@ -40,3 +40,19 @@ func Authhandler(c *fiber.Ctx) error {
 
 	return c.JSON(result)
 }
+
+func Me(c *fiber.Ctx) error {
+	// ดึง user จาก DB (ตัวอย่าง)
+	username, ok := c.Locals("username").(string)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "unauthorized")
+	}
+	result, err := services.FindUserByUsername(username)
+	if err != nil {
+		return fiber.ErrUnauthorized
+	}
+
+	return c.JSON(fiber.Map{
+		"user": result,
+	})
+}

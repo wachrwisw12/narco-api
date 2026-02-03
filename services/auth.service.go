@@ -69,19 +69,19 @@ func AuthLoginService(
 	cfg *config.Config,
 	req models.AuthRequest,
 ) (*models.AuthResponse, error) {
-	user, err := findUserByUsername(req.Username)
+	user, err := FindUserByUsername(req.Username)
 	if err != nil {
 		return nil, errors.New("ไม่พบผู้ใช้งาน")
 	}
 
-	if err := bcrypt.CompareHashAndPassword(
+	if err = bcrypt.CompareHashAndPassword(
 		[]byte(user.Password),
 		[]byte(req.Password),
 	); err != nil {
 		return nil, errors.New("รหัสผ่านไม่ถูกต้อง")
 	}
 
-	token, err := middlewares.GenerateJWT(cfg, user.ID, user.Role)
+	token, err := middlewares.GenerateJWT(cfg, user.ID, user.RoleId, user.Username)
 	if err != nil {
 		return nil, errors.New("ไม่สามารถสร้าง token ได้")
 	}
@@ -95,12 +95,12 @@ func AuthLoginService(
 	}, nil
 }
 
-func findUserByUsername(username string) (*models.User, error) {
+func FindUserByUsername(username string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	query := `
-	SELECT u.id, u.username, u.password, u.role_id ,r.role_name
+	SELECT u.id, u.username, u.password, u.role_id ,r.role_name,u.fullname
 	FROM users u
     LEFT JOIN roles r ON r.id=u.role_id
 	WHERE username = $1
@@ -114,6 +114,7 @@ func findUserByUsername(username string) (*models.User, error) {
 		&u.Password,
 		&u.RoleId,
 		&u.Role,
+		&u.Fullname,
 	)
 	if err != nil {
 		return nil, err

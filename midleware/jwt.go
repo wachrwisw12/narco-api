@@ -6,70 +6,52 @@ import (
 	"time"
 
 	"api-naco/config"
-	"api-naco/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func JWTMiddleware(requiredRoles ...string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		auth := c.Get("Authorization")
+func JWTMiddleware(c *fiber.Ctx) error {
+	auth := c.Get("Authorization")
 
-		// 🔓 guest route
-		if auth == "" {
-			if len(requiredRoles) == 0 {
-				c.Locals("role", "guest")
-				return c.Next()
+	// 1. ต้องมี Authorization header
+	if auth == "" {
+		return fiber.ErrUnauthorized
+	}
+
+	// 2. ต้องเป็น Bearer token
+	parts := strings.Split(auth, " ")
+	if len(parts) != 2 || parts[0] != "Bearer" {
+		return fiber.ErrUnauthorized
+	}
+
+	tokenStr := parts[1]
+
+	// 3. Parse + Verify token
+	token, err := jwt.Parse(
+		tokenStr,
+		func(t *jwt.Token) (interface{}, error) {
+			// 3.1 เช็ค algorithm
+			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fiber.ErrUnauthorized
 			}
-			return fiber.ErrUnauthorized
-		}
+			// 3.2 ใช้ Public key
+			return config.Cfg.JWTPubKey, nil
+		},
+	)
 
-		// Bearer token
-		parts := strings.Split(auth, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return fiber.ErrUnauthorized
-		}
+	// 4. token ไม่ valid หรือ error (รวมหมดอายุ)
+	if err != nil || !token.Valid {
+		return fiber.ErrUnauthorized
+	}
 
-		tokenStr := parts[1]
-
-		token, err := jwt.ParseWithClaims(
-			tokenStr,
-			&models.JWTClaims{},
-			func(t *jwt.Token) (interface{}, error) {
-				if t.Method.Alg() != jwt.SigningMethodRS256.Alg() {
-					return nil, fiber.ErrUnauthorized
-				}
-				return config.Cfg.JWTPubKey, nil
-			},
-		)
-
-		if err != nil || !token.Valid {
-			return fiber.ErrUnauthorized
-		}
-
-		claims := token.Claims.(*models.JWTClaims)
-
-		// 🧱 ตรวจ role
-		if len(requiredRoles) > 0 {
-			allowed := false
-			for _, r := range requiredRoles {
-				if claims.Role == r {
-					allowed = true
-					break
-				}
-			}
-			if !allowed {
-				return fiber.ErrForbidden
-			}
-		}
-
-		// แนบ user info
-		c.Locals("user_id", claims.UserID)
-		c.Locals("role", claims.Role)
-
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
 		return c.Next()
 	}
+	c.Locals("username", claims["username"])
+	// ✅ ผ่าน = token ถูก + ยังไม่หมดอายุ
+	return c.Next()
 }
 
 func OptionalJWT() fiber.Handler {
@@ -108,13 +90,14 @@ func OptionalJWT() fiber.Handler {
 	}
 }
 
-func GenerateJWT(cfg *config.Config, userID int, role string) (string, error) {
+func GenerateJWT(cfg *config.Config, userID int, roleID int, username string) (string, error) {
 	claims := jwt.MapClaims{
-		"sub":  userID,
-		"role": role,
-		"iss":  "api-naco",
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
-		"iat":  time.Now().Unix(),
+		"sub":      userID,
+		"role":     roleID,
+		"iss":      "api-naco",
+		"username": username,
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
