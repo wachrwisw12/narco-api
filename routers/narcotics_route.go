@@ -8,19 +8,56 @@ import (
 )
 
 func SetupNarcoticsReport(nacoticRoute fiber.Router) {
-	nacoticRoute.Post("/sendreport", handlers.SendReport)
-	nacoticRoute.Get("/reportInit", handlers.ReportInit)
-	nacoticRoute.Get("/reports", handlers.ListReports)
-	nacoticRoute.Post("/track", handlers.TrackReport)
+	nacoticRoute.Post(
+		"/sendreport",
+		middlewares.ReportLimiter(), // 🔒 กัน spam report
+		handlers.SendReport,
+	)
 
-	nacoticRoute.Get("/app-init", middlewares.OptionalJWT(), handlers.AppInit)
+	nacoticRoute.Get(
+		"/reportInit",
+		middlewares.PublicLimiter(),
+		handlers.ReportInit,
+	)
+
+	nacoticRoute.Get(
+		"/reports",
+		middlewares.PublicLimiter(),
+		handlers.ListReports,
+	)
+
+	nacoticRoute.Post(
+		"/track",
+		middlewares.TrackLimiter(), // 🔒 brute force tracking
+		handlers.TrackReport,
+	)
+
+	nacoticRoute.Get(
+		"/app-init",
+		middlewares.OptionalJWT(),
+		middlewares.PublicLimiter(),
+		handlers.AppInit,
+	)
 
 	nacoticRoute.Get("/test", handlers.Test)
 }
 
 func SetupAuth(auth fiber.Router) {
-	auth.Post("/singin", handlers.Authhandler)
-	auth.Post("/register", handlers.Registerhandler)
-	auth.Get("/me", middlewares.JWTMiddleware, handlers.Me)
-	// auth.Get("/me", handlers.Test)
+	auth.Post(
+		"/singin",
+		middlewares.LoginLimiter(), // 🔒 brute force login
+		handlers.Authhandler,
+	)
+
+	auth.Post(
+		"/register",
+		middlewares.RegisterLimiter(), // 🔒 spam account
+		handlers.Registerhandler,
+	)
+
+	auth.Get(
+		"/me",
+		middlewares.JWTMiddleware,
+		handlers.Me,
+	)
 }
