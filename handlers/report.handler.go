@@ -39,7 +39,7 @@ func ReceiveReport(c *fiber.Ctx) error {
 }
 
 func ListReports(c *fiber.Ctx) error {
-	println("sdfsdf")
+	println("sdfsdf__")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -62,7 +62,6 @@ func ListReports(c *fiber.Ctx) error {
 		if err := rows.Scan(
 			&r.ID,
 			&r.TrackingCode,
-			// &r.Category,
 			&r.Details,
 			&r.Status,
 			&r.CreatedAt,

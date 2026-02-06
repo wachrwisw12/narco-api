@@ -12,17 +12,11 @@ import (
 )
 
 func JWTMiddleware(c *fiber.Ctx) error {
-	auth := c.Get("Authorization")
+	authHeader := c.Get("Authorization")
 
-	// 1. ต้องมี Authorization header
-	if auth == "" {
-		return fiber.ErrUnauthorized
-	}
-
-	// 2. ต้องเป็น Bearer token
-	parts := strings.Split(auth, " ")
+	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		return fiber.ErrUnauthorized
+		return c.Status(401).SendString("Invalid token nok")
 	}
 
 	tokenStr := parts[1]
