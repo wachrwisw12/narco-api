@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log"
 	"mime/multipart"
 	"path"
 	"path/filepath"
@@ -74,6 +75,9 @@ func GetFilesByReportID(
 	ctx context.Context,
 	reportID int,
 ) ([]models.ReportFile, error) {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	query := `
 	SELECT id,
 	       object_key,
@@ -96,6 +100,7 @@ func GetFilesByReportID(
 
 	for rows.Next() {
 		var f models.ReportFile
+
 		if err := rows.Scan(
 			&f.ID,
 			&f.ObjectKey,
@@ -113,12 +118,22 @@ func GetFilesByReportID(
 			10*time.Minute,
 		)
 		if err != nil {
-			return nil, err
+			// log แล้วข้าม ไม่ให้พังทั้งก้อน
+			log.Printf(
+				"presign failed object_key=%s err=%v",
+				f.ObjectKey,
+				err,
+			)
+			continue
 		}
 
 		f.StreamURL = streamURL
 		files = append(files, f)
 	}
 
-	return files, nil // ถ้าไม่พบ = []
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }

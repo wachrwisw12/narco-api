@@ -44,8 +44,15 @@ func ListReports(c *fiber.Ctx) error {
 	defer cancel()
 
 	query := `
-	SELECT id,tracking_code,details,status,created_at
-	FROM incident_reports
+	SELECT ir.id,
+	       ir.tracking_code,
+	       ir.details,
+	       ir.status,
+	       rs.name_status,
+	       ir.created_at,
+	       ir.updated_at
+	FROM incident_reports ir
+	JOIN report_status rs ON rs.id_status = ir.status
 
 	`
 
@@ -64,7 +71,9 @@ func ListReports(c *fiber.Ctx) error {
 			&r.TrackingCode,
 			&r.Details,
 			&r.Status,
+			&r.NameStatus,
 			&r.CreatedAt,
+			&r.UpdatedAt,
 		); err != nil {
 			return fiber.NewError(500, "scan error")
 		}

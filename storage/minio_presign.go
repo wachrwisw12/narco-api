@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 )
@@ -22,11 +23,24 @@ func PresignedGetURL(
 		return "", err
 	}
 
-	// 🔥 override ให้เป็น public
-	u.Scheme = os.Getenv("MINIO_PUBLIC_SCHEME") // https
-	u.Host = os.Getenv("MINIO_PUBLIC_HOST")     // vm11-skko.moph.go.th
-	u.Path = os.Getenv("MINIO_PUBLIC_PATH") + u.Path
-	// /drugnarco/minio + /bucket/...
+	fmt.Println("RAW URL :", u.String())
+
+	// ===== override public =====
+	scheme := os.Getenv("MINIO_PUBLIC_SCHEME")
+	host := os.Getenv("MINIO_PUBLIC_HOST")
+	publicPath := os.Getenv("MINIO_PUBLIC_PATH")
+
+	if scheme != "" {
+		u.Scheme = scheme
+	}
+	if host != "" {
+		u.Host = host
+	}
+	if publicPath != "" {
+		u.Path = publicPath + u.Path
+	}
+
+	fmt.Println("PUBLIC URL:", u.String())
 
 	return u.String(), nil
 }

@@ -28,3 +28,7 @@ func AppInit(c *fiber.Ctx) error {
 		"menus": menus,
 	})
 }
+
+func SearchVillage(c *fiber.Ctx) error {
+	return nil
+}

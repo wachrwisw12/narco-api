@@ -21,7 +21,7 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 	)
 
 	nacoticRoute.Get(
-		"/reports",
+		"/case-reports",
 		middlewares.PublicLimiter(),
 		middlewares.JWTMiddleware,
 		handlers.ListReports,
