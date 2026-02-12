@@ -48,14 +48,19 @@ func ListReports(c *fiber.Ctx) error {
 	       ir.tracking_code,
 	       ir.details,
 	       ir.status,
+		   ir.village,
+		   CONCAT(ir.village,' ต.',sd.name_th,' อ.',dt.name_th,' จ.',p.name_th) AS fullarea,
+		   ir.sub_district_id,
 	       rs.name_status,
 	       ir.created_at,
 	       ir.updated_at
 	FROM incident_reports ir
-	JOIN report_status rs ON rs.id_status = ir.status
-
+ LEFT JOIN sub_districts sd ON ir.sub_district_id = sd.id
+ LEFT JOIN districts dt ON dt.id=sd.district_id
+ INNER JOIN provinces p ON p.id=dt.province_id
+ INNER JOIN report_status rs ON rs.id_status = ir.status 
+ WHERE rs.id_status=1
 	`
-
 	rows, err := db.DB.Query(ctx, query)
 	if err != nil {
 		return fiber.NewError(500, err.Error())
@@ -71,6 +76,9 @@ func ListReports(c *fiber.Ctx) error {
 			&r.TrackingCode,
 			&r.Details,
 			&r.Status,
+			&r.Village,
+			&r.Fullarea,
+			&r.SubDistrictId,
 			&r.NameStatus,
 			&r.CreatedAt,
 			&r.UpdatedAt,
@@ -79,7 +87,9 @@ func ListReports(c *fiber.Ctx) error {
 		}
 		reports = append(reports, r)
 	}
-
+	if reports == nil {
+		reports = []models.NacorticsReport{}
+	}
 	return c.JSON(fiber.Map{
 		"success": true,
 		"count":   len(reports),

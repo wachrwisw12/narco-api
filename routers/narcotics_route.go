@@ -10,7 +10,7 @@ import (
 func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 	nacoticRoute.Post(
 		"/sendreport",
-		middlewares.ReportLimiter(), // 🔒 กัน spam report
+		// middlewares.ReportLimiter(), // 🔒 กัน spam report
 		handlers.SendReport,
 	)
 
@@ -22,7 +22,7 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 
 	nacoticRoute.Get(
 		"/case-reports",
-		middlewares.PublicLimiter(),
+		// middlewares.PublicLimiter(),
 		middlewares.JWTMiddleware,
 		handlers.ListReports,
 	)
@@ -33,12 +33,12 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 		handlers.TrackReport,
 	)
 
-	nacoticRoute.Get(
-		"/app-init",
-		middlewares.OptionalJWT(),
-		middlewares.PublicLimiter(),
-		handlers.AppInit,
-	)
+	// nacoticRoute.Get(
+	// 	"/app-init",
+	// 	middlewares.OptionalJWT(),
+	// 	middlewares.PublicLimiter(),
+	// 	handlers.AppInit,
+	// )
 
 	nacoticRoute.Get("/test", handlers.Test)
 }

@@ -8,39 +8,51 @@ import (
 	"api-naco/models"
 )
 
-func GetMenusByRole(role string) ([]models.Menu, error) {
+func DistrictsService(q string, provinceID string) ([]models.District, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	query := `
-	SELECT m.menu_id ,mu.code,mu.label,mu."path",mu.icon ,mu.sort_order FROM roles r 
-LEFT JOIN role_menus m ON m.role_id=r."id"
-LEFT JOIN menus mu ON mu."id" =m.menu_id
-WHERE r.role_name=$1
+		SELECT
+	sd.id,
+	sd.district_id,
+	p.id,
+	sd.name_th,
+	d.name_th AS district,
+	p.name_th AS province
+FROM sub_districts sd
+JOIN districts d ON d.id = sd.district_id
+JOIN provinces p ON p.id = d.province_id
+WHERE sd.name_th ILIKE '%' || $1 || '%' AND d.id::text LIKE $2 || '%'
+
+LIMIT 20
+
 	`
 
-	rows, err := db.DB.Query(ctx, query, role)
+	rows, err := db.DB.Query(ctx, query, q, provinceID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	menus := []models.Menu{}
+	var result []models.District
 
 	for rows.Next() {
-		var m models.Menu
+		var d models.District
+
 		if err := rows.Scan(
-			&m.ID,
-			&m.Code,
-			&m.Label,
-			&m.Path,
-			&m.Icon,
-			&m.Sort,
+			&d.ID,
+			&d.DistrictId,
+			&d.ProvinceId,
+			&d.SubDistricts,
+			&d.District,
+			&d.Province,
 		); err != nil {
 			return nil, err
 		}
-		menus = append(menus, m)
+
+		result = append(result, d)
 	}
 
-	return menus, nil
+	return result, nil
 }

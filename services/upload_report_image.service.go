@@ -115,7 +115,7 @@ func GetFilesByReportID(
 		streamURL, err := storage.PresignedGetURL(
 			ctx,
 			f.ObjectKey,
-			10*time.Minute,
+			50*time.Minute,
 		)
 		if err != nil {
 			// log แล้วข้าม ไม่ให้พังทั้งก้อน

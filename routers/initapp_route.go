@@ -8,7 +8,7 @@ import (
 )
 
 func SetupInnitApp(InnitApp fiber.Router) {
-	InnitApp.Post(
+	InnitApp.Get(
 		"/search-village",
 		middlewares.ReportLimiter(), // 🔒 กัน spam report
 		handlers.SearchVillage,

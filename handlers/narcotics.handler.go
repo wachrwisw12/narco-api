@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"api-naco/db"
@@ -17,35 +18,43 @@ func ReportInit(c *fiber.Ctx) error {
 	return nil
 }
 
-type SendReportRequest struct {
-	Details string `json:"details"`
-}
-
 func SendReport(c *fiber.Ctx) error {
 	// 1️⃣ รับ field ธรรมดา
-	req := SendReportRequest{
-		Details: c.FormValue("details"),
+
+	subDistrictStr := c.FormValue("sub_district_id")
+
+	subDistrictID, err := strconv.Atoi(subDistrictStr)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": "invalid sub_district_id",
+		})
+	}
+
+	req := models.SendReportRequest{
+		Details:       c.FormValue("details"),
+		SubDistrictId: subDistrictID,
+		Village:       c.FormValue("village"),
 	}
 	if req.Details == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "missing details")
 	}
-	println("ssdfsfdsdf", req.Details)
+	// println("ssdfsfdsdf", req.Details)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// 2️⃣ insert incident_reports
 	var report models.NacorticsReport
-	err := db.DB.QueryRow(ctx, `
-		INSERT INTO incident_reports (details)
-		VALUES ($1)
+	errq := db.DB.QueryRow(ctx, `
+		INSERT INTO incident_reports (details,sub_district_id,village)
+		VALUES ($1,$2,$3)
 		RETURNING id, details, tracking_code
-	`, req.Details).Scan(
+	`, req.Details, req.SubDistrictId, req.Village).Scan(
 		&report.ID,
 		&report.Details,
 		&report.TrackingCode,
 	)
-	if err != nil {
-		return fiber.NewError(500, err.Error())
+	if errq != nil {
+		return fiber.NewError(500, errq.Error())
 	}
 
 	// base path สำหรับไฟล์
