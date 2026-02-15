@@ -31,3 +31,9 @@ type SendReportRequest struct {
 	SubDistrictId int    `json:"sub_district_id"`
 	Village       string `json:"village"`
 }
+
+type StatusRequest struct {
+	Id     int    `json:"id"`
+	Action int    `json:"action"`
+	Reason string `json:"reason"`
+}

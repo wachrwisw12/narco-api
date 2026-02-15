@@ -26,7 +26,7 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 		middlewares.JWTMiddleware,
 		handlers.ListReports,
 	)
-
+	nacoticRoute.Post("/update-status", middlewares.JWTMiddleware, handlers.UpdateStatusReport)
 	nacoticRoute.Post(
 		"/track",
 		middlewares.TrackLimiter(), // 🔒 brute force tracking

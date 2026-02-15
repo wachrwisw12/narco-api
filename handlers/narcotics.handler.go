@@ -119,6 +119,40 @@ func SendReport(c *fiber.Ctx) error {
 	})
 }
 
+func UpdateStatusReport(c *fiber.Ctx) error {
+	var status models.StatusRequest
+	username, ok := c.Locals("username").(string)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := c.BodyParser(&status); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "body invalid",
+			"error":   err.Error(),
+		})
+	}
+	query := `
+	UPDATE incident_reports
+	SET status = $1,
+	    operate_name=$2,
+	    received_at = now()
+	WHERE id = $3 AND status = 1
+	`
+	cmd, err := db.DB.Exec(ctx, query, status.Action, username, status.Id)
+	if err != nil {
+		return fiber.NewError(500, err.Error())
+	}
+
+	if cmd.RowsAffected() == 0 {
+		return fiber.NewError(400, "report already received or not found")
+	}
+
+	return c.JSON(fiber.Map{
+		"username": username,
+		"status":   status,
+		"ok":       ok,
+	})
+}
+
 func Test(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
