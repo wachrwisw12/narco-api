@@ -100,7 +100,7 @@ func FindUserByUsername(username string) (*models.User, error) {
 	defer cancel()
 
 	query := `
-	SELECT u.id, u.username, u.password, u.role_id ,r.role_name,u.fullname
+	SELECT u.id, u.username, u.password, u.role_id ,r.role_name,u.fullname,u.district_id
 	FROM users u
     LEFT JOIN roles r ON r.id=u.role_id
 	WHERE username = $1
@@ -115,6 +115,32 @@ func FindUserByUsername(username string) (*models.User, error) {
 		&u.RoleId,
 		&u.Role,
 		&u.Fullname,
+		&u.DistrictId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
+
+func FindDistrictUsername(username string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `
+	SELECT u.id,u.district_id,u.role_id
+	FROM users u
+    LEFT JOIN roles r ON r.id=u.role_id
+	WHERE username = $1
+	LIMIT 1
+	`
+
+	var u models.User
+	err := db.DB.QueryRow(ctx, query, username).Scan(
+		&u.ID,
+		&u.DistrictId,
+		&u.RoleId,
 	)
 	if err != nil {
 		return nil, err

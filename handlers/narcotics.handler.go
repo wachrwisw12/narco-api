@@ -8,6 +8,8 @@ import (
 
 	"api-naco/db"
 	"api-naco/models"
+	"api-naco/ws"
+
 	"api-naco/services"
 
 	"github.com/gofiber/fiber/v2"
@@ -145,6 +147,7 @@ func UpdateStatusReport(c *fiber.Ctx) error {
 	if cmd.RowsAffected() == 0 {
 		return fiber.NewError(400, "report already received or not found")
 	}
+	ws.Broadcast("report_changed")
 
 	return c.JSON(fiber.Map{
 		"username": username,

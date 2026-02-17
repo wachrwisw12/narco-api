@@ -47,6 +47,7 @@ func main() {
 	}))
 
 	routers.SetupRoute(app)
+	routers.SetupWS(app)
 
 	log.Println("🚀 API started on :8000")
 	log.Fatal(app.Listen(":8000"))

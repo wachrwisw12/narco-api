@@ -39,10 +39,25 @@ func ReceiveReport(c *fiber.Ctx) error {
 }
 
 func ListReports(c *fiber.Ctx) error {
-	println("sdfsdf__")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+	username, ok := c.Locals("username").(string)
+	if !ok {
+		return c.Status(401).JSON(fiber.Map{"error": "unauthorized"})
+	}
 
+	d, err := services.FindDistrictUsername(username)
+	if err != nil {
+		return fiber.NewError(500, "cannot find user district")
+	}
+	if d.RoleId == 1 {
+	} else if d.RoleId == 2 {
+	} else if d.RoleId == 3 {
+	}
+	// var u *models.User
+	// u, err := services.FindUserByUsername(user)
+	// userDistrict := u.DistrictId
+	println("printuser", d.DistrictId, d.RoleId)
 	query := `
 	SELECT ir.id,
 	       ir.tracking_code,
@@ -59,7 +74,7 @@ func ListReports(c *fiber.Ctx) error {
  LEFT JOIN districts dt ON dt.id=sd.district_id
  INNER JOIN provinces p ON p.id=dt.province_id
  INNER JOIN report_status rs ON rs.id_status = ir.status 
- WHERE rs.id_status=1
+ WHERE ir.status=1
 	`
 	rows, err := db.DB.Query(ctx, query)
 	if err != nil {

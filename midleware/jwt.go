@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -48,41 +47,41 @@ func JWTMiddleware(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func OptionalJWT() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		auth := c.Get("Authorization")
+// func OptionalJWT() fiber.Handler {
+// 	return func(c *fiber.Ctx) error {
+// 		auth := c.Get("Authorization")
 
-		// ไม่มี token → guest
-		if auth == "" {
-			return c.Next()
-		}
+// 		// ไม่มี token → guest
+// 		if auth == "" {
+// 			return c.Next()
+// 		}
 
-		tokenStr := strings.TrimPrefix(auth, "Bearer ")
+// 		tokenStr := strings.TrimPrefix(auth, "Bearer ")
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, errors.New("unexpected signing method")
-			}
-			return config.Cfg.JWTPubKey, nil
-		})
+// 		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+// 			if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+// 				return nil, errors.New("unexpected signing method")
+// 			}
+// 			return config.Cfg.JWTPubKey, nil
+// 		})
 
-		if err != nil || !token.Valid {
-			// token พัง → ถือเป็น guest (ไม่ throw)
-			return c.Next()
-		}
+// 		if err != nil || !token.Valid {
+// 			// token พัง → ถือเป็น guest (ไม่ throw)
+// 			return c.Next()
+// 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			return c.Next()
-		}
+// 		claims, ok := token.Claims.(jwt.MapClaims)
+// 		if !ok {
+// 			return c.Next()
+// 		}
 
-		// 🔑 set context
-		c.Locals("user_id", claims["sub"])
-		c.Locals("role", claims["role"])
+// 		// 🔑 set context
+// 		c.Locals("user_id", claims["sub"])
+// 		c.Locals("role", claims["role"])
 
-		return c.Next()
-	}
-}
+// 		return c.Next()
+// 	}
+// }
 
 func GenerateJWT(cfg *config.Config, userID int, roleID int, username string) (string, error) {
 	claims := jwt.MapClaims{
