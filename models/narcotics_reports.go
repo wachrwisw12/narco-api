@@ -19,6 +19,7 @@ type NacorticsReport struct {
 	SubDistrictId *int         `json:"sub_district_id"`
 	Fullarea      string       `json:"full_area"`
 	NameStatus    string       `json:"name_status"`
+	FileCount     int          `json:"file_count"`
 	Files         []ReportFile `json:"files"`
 	Details       string       `json:"details"`
 	Status        string       `json:"status"`

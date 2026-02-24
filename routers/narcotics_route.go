@@ -26,6 +26,12 @@ func SetupNarcoticsReport(nacoticRoute fiber.Router) {
 		middlewares.JWTMiddleware,
 		handlers.ListReports,
 	)
+	nacoticRoute.Get(
+		"/case-reports/:id",
+		// middlewares.PublicLimiter(),
+		middlewares.JWTMiddleware,
+		handlers.GetReportById,
+	)
 	nacoticRoute.Post("/update-status", middlewares.JWTMiddleware, handlers.UpdateStatusReport)
 	nacoticRoute.Post(
 		"/track",
